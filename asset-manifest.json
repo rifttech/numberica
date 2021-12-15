@@ -1,20 +1,20 @@
 {
   "files": {
-    "main.css": "/static/css/main.46e15654.chunk.css",
-    "main.js": "/static/js/main.100b3d79.chunk.js",
-    "main.js.map": "/static/js/main.100b3d79.chunk.js.map",
-    "runtime-main.js": "/static/js/runtime-main.98c05c98.js",
-    "runtime-main.js.map": "/static/js/runtime-main.98c05c98.js.map",
-    "static/js/2.52d166fc.chunk.js": "/static/js/2.52d166fc.chunk.js",
-    "static/js/2.52d166fc.chunk.js.map": "/static/js/2.52d166fc.chunk.js.map",
-    "static/js/3.5dfabd0d.chunk.js": "/static/js/3.5dfabd0d.chunk.js",
-    "static/js/3.5dfabd0d.chunk.js.map": "/static/js/3.5dfabd0d.chunk.js.map",
-    "index.html": "/index.html",
-    "static/css/main.46e15654.chunk.css.map": "/static/css/main.46e15654.chunk.css.map",
-    "static/js/2.52d166fc.chunk.js.LICENSE.txt": "/static/js/2.52d166fc.chunk.js.LICENSE.txt"
+    "main.css": "/numberica/static/css/main.46e15654.chunk.css",
+    "main.js": "/numberica/static/js/main.100b3d79.chunk.js",
+    "main.js.map": "/numberica/static/js/main.100b3d79.chunk.js.map",
+    "runtime-main.js": "/numberica/static/js/runtime-main.a1178285.js",
+    "runtime-main.js.map": "/numberica/static/js/runtime-main.a1178285.js.map",
+    "static/js/2.52d166fc.chunk.js": "/numberica/static/js/2.52d166fc.chunk.js",
+    "static/js/2.52d166fc.chunk.js.map": "/numberica/static/js/2.52d166fc.chunk.js.map",
+    "static/js/3.5dfabd0d.chunk.js": "/numberica/static/js/3.5dfabd0d.chunk.js",
+    "static/js/3.5dfabd0d.chunk.js.map": "/numberica/static/js/3.5dfabd0d.chunk.js.map",
+    "index.html": "/numberica/index.html",
+    "static/css/main.46e15654.chunk.css.map": "/numberica/static/css/main.46e15654.chunk.css.map",
+    "static/js/2.52d166fc.chunk.js.LICENSE.txt": "/numberica/static/js/2.52d166fc.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.98c05c98.js",
+    "static/js/runtime-main.a1178285.js",
     "static/js/2.52d166fc.chunk.js",
     "static/css/main.46e15654.chunk.css",
     "static/js/main.100b3d79.chunk.js"
