@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Parser } from 'expr-eval';
 import * as GQ from "./../commons/GaussianQuadrature";
-
-
+import 'katex/dist/katex.min.css'
+import Latex from 'react-latex-next'
 
 
 const parser = new Parser();
@@ -13,31 +13,48 @@ export default function Ex4() {
         fn: "sin(x)",
         a: "0",
         b: "pi",
+        aeval: 0,
+        beval: 0,
         round: 0,
         result: [],
+        graph: []
     });
 
     let calc = ({ fn, a, b, round }) => {
         try {
+            let fnexr = parser.parse(fn);
+            let argA = parser.parse(a.toUpperCase());
+            let argB = parser.parse(b.toUpperCase());
+            let evA = argA.evaluate();
+            let evB = argB.evaluate();
+            let func = (exr) => (x) => {
+                return exr.evaluate({ x: x })
+            };
             let temp = [];
             for (let i = 2; i < 8; i++) {
 
-                let fnexr = parser.parse(fn);
-                let argA = parser.parse(a.toUpperCase());
-                let argB = parser.parse(b.toUpperCase());
-
-                let func = (exr) => (x) => {
-                    return exr.evaluate({ x: x })
-                };
 
 
-                let raw = GQ.integrate(func(fnexr), argA.evaluate(), argB.evaluate(), i)
-
-
-
+                let raw = GQ.integrate(func(fnexr), evA, evB, i)
                 temp.push({ id: i, val: raw });
             }
-            setData(prev => ({ ...prev, result: [...temp] }));
+
+            let it = 0;
+            let step = (evB - evA) / 100;
+            let values = []
+            while ((evA <= evB) || it < 10000) {
+                values.push({ x: evA, y: fnexr.evaluate({ x: evA }) })
+                evA += step;
+                it++;
+            }
+
+            setData(prev => ({
+                ...prev,
+                result: [...temp],
+                graph: [...values],
+                aeval: evA,
+                beval: evB
+            }));
         } catch (err) {
             console.log("При вычислении случилась ошибка", err);
             alert("Увы, что-то пошло нетак! Попробуй еще раз.")
@@ -87,11 +104,23 @@ export default function Ex4() {
             {
                 data.result.map(e => {
                     return (
-                        <p style={{ marginLeft: "10px" }} key={e.id}> I = {GQ.round(e.val, parseInt(data.round))} , при n={e.id}</p>
+                        <Latex key={e.id}>{`$$ I = ${coefs(data.a, data.b)[0]}\\sum_{i=0}^{${e.id}}{w_if\\left(${coefs(data.a, data.b)[0]}z_i+${coefs(data.a, data.b)[1]}\\right)} =${GQ.round(e.val, parseInt(data.round))} $$ `}</Latex>
                     )
                 })
             }
+
         </>
     )
 }
 
+function coefs(a, b) {
+    let bound = [
+        parser.parse(a.toUpperCase()).evaluate(),
+        parser.parse(b.toUpperCase()).evaluate()
+    ];
+    console.log(bound)
+    return [
+        (bound[1] - bound[0]) / 2,
+        (bound[1] + bound[0]) / 2
+    ]
+}

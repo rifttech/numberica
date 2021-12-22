@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import { derrive } from "../commons/FiniteDifference";
+import { find } from "../commons/DifferenceTable"
+import ControlPoint from "../components/ControlPoint";
+import { round } from "../commons/utils";
+import { LineChart, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 const initial = {
     data: [
         "0;0",
@@ -17,12 +21,15 @@ const initial = {
     ],
 }
 
-
-
 export default function Ex3() {
     const [state, setState] = useState({
         text: initial.data.join("\n"),
-        result: []
+        result: [],
+        plot: {
+            data: [],
+            min: 10,
+            max: 90
+        }
     });
 
 
@@ -42,34 +49,89 @@ export default function Ex3() {
                 <div>
                     <button onClick={(e) => {
                         let array = calculate(state.text);
-                        setState(prev => ({ ...prev, result: [...array] }))
+
+                        // зная табличные значения, интерполируем разностями
+                        let dots = array.map(e => Number(e.x));
+                        // функция
+                        let xy = array.map(e => ({ x: e.x, y: e.y }));
+                        // производные
+                        let dy = array.map(e => ({ x: e.x, y: e.fx }));
+                        let it = 0;
+                        let plot = [];
+                        for (let i = 0; i < array.length - 1; i++) {
+                            let step = Math.abs(array[i].x - array[i + 1].x) / 10;
+                            let left = array[i].x;
+                            let right = array[i + 1].x;
+                            while (left < right + step || it > 10000) {
+                                let rl = round(left, 3)
+                                plot.push({ x: rl, y: find(rl, xy), fx: find(rl, dy), visible: dots.indexOf(rl) >= 0 });
+                                left += step;
+                                it++;
+                            }
+                        }
+
+
+                        setState(prev => ({
+                            ...prev, result: [...array], plot: {
+                                data: [...plot],
+                                min: dots[0],
+                                max: dots[dots.length]
+                            }
+                        }))
                     }
                     }>Расчитать производные!</button>
                 </div>
 
             </div>
-            <div className="ex3_container__main">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td>X</td>
-                            <td>Y</td>
-                            <td>f`(x)</td>
-                        </tr>
+            <div className="ex3_container__main" style={{ display: "flex", flexDirection: "row" }}>
 
-                        {
-                            state.result.map((e, i) => {
-                                return (
-                                    <tr key={i}>
-                                        <td>{e.x}</td>
-                                        <td>{e.y}</td>
-                                        <td>{e.fx}</td>
-                                    </tr>
-                                )
-                            })
-                        }
-                    </tbody>
-                </table>
+                <div>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>X</td>
+                                <td>Y</td>
+                                <td>f`(x)</td>
+                            </tr>
+                            {
+                                state.result.map((e, i) => {
+                                    return (
+                                        <tr key={i}>
+                                            <td>{e.x}</td>
+                                            <td>{e.y}</td>
+                                            <td>{e.fx}</td>
+                                        </tr>
+                                    )
+                                })
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <ResponsiveContainer width="80%" height="50%">
+                    <ComposedChart
+                        width={500}
+                        height={300}
+                        data={state.plot.data}
+                        margin={{
+                            top: 5,
+                            right: 30,
+                            left: 20,
+                            bottom: 5,
+                        }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" dataKey="x" domain={[Math.ceil(state.plot.min) - 5, Math.ceil(state.plot.max + 5)]} />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line name="f(x)" type="monotone" dataKey="y" stroke="#8884d8"
+                            dot={<ControlPoint />}
+                        />
+                        <Line name="f`(x)" type="monotone" dataKey="fx" stroke="#ff7300"
+                            dot={<ControlPoint />}
+                        />
+                    </ComposedChart>
+                </ResponsiveContainer>
             </div>
         </div>
     </>)
@@ -106,6 +168,6 @@ function parsedata(text) {
             let str = e.replace(/\s/g, '');
             let val = str.split(";");
 
-            return { x: val[0], y: val[1] }
+            return { x: Number(val[0]), y: Number(val[1]) }
         })
 }

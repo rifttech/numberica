@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { find } from "../commons/DifferenceTable";
-import { round } from "../commons/GaussianQuadrature"
+import { round } from "../commons/GaussianQuadrature";
+import { parse } from "../commons/utils";
+import DataInput from "../components/DataInput";
+import ControlPoint from "../components/ControlPoint";
+import { LineChart, ComposedChart, Scatter, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 const initial = {
     data: [
         "10;0.17365",
@@ -17,7 +21,14 @@ export default function Ex1() {
     const [state, setState] = useState({
         text: initial.data.join("\n"),
         result: undefined,
-        value: 23
+        value: 23,
+        plot: {
+            data: [],
+            step: 100,
+            origin: [],
+            min: 0,
+            max: 70
+        }
     });
 
     return (<>
@@ -28,10 +39,7 @@ export default function Ex1() {
                 <p>
                     Исходные данные:
                 </p>
-                <textarea
-                    style={{ width: "200px", height: "300px", fontSize: "20px" }}
-                    value={state.text}
-                    onChange={(e) => setState(p => ({ ...p, text: e.target.value }))} />
+                <DataInput text={state.text} onChange={(e) => setState(p => ({ ...p, text: e.target.value }))} />
                 <div>
                     <label>
                         f(
@@ -41,23 +49,70 @@ export default function Ex1() {
                 </div>
                 <div>
                     <button onClick={(e) => {
-                        let array = calculate(state.text, state.value);
-                        setState(prev => ({ ...prev, result: array }))
+                        let data = parse(state.text);
+                        let array = calculate(data, state.value);
+                        let plot = []
+                        let it = 0;
+                        let dots = data.map(e => Number(e.x)) || [];
+
+                        // расширяем сегрметы точками,
+                        // ибо надо отображать контрольные точки и они должны входить в тот же дата сет
+
+                        for (let i = 0; i < dots.length - 1; i++) {
+                            let step = Math.abs(dots[i] - dots[i + 1]) / 10;
+                            let left = dots[i];
+                            let right = dots[i + 1];
+                            while (left < right + step || it > 10000) {
+                                plot.push({ x: left, y: calculate(data, left), visible: dots.indexOf(left) >= 0 });
+                                left += step;
+                                it++;
+                            }
+                        }
+
+                        setState(prev => ({
+                            ...prev, result: array, plot: {
+                                data: [...plot],
+                                step: 100,
+                                min: dots[0],
+                                max: dots[dots.length - 1],
+                                origin: dots
+                            }
+                        }))
                     }
                     }>Расчитать!</button>
                 </div>
 
             </div>
             <div className="ex3_container__main">
-
+                <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart
+                        width={500}
+                        height={300}
+                        data={state.plot.data}
+                        margin={{
+                            top: 5,
+                            right: 30,
+                            left: 20,
+                            bottom: 5,
+                        }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" dataKey="x" domain={[state.plot.min - 5, state.plot.max + 5]} />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line name="Итерполянта f(x)" type="monotone" dataKey="y" stroke="#8884d8"
+                            dot={<ControlPoint />}
+                        />
+                    </ComposedChart>
+                </ResponsiveContainer>
             </div>
         </div>
     </>)
 }
-function calculate(text, v) {
-
+function calculate(data, v) {
     try {
-        let data = parsedata(text);
+
         let y = find(v, data)
         return y;
     } catch (err) {
@@ -68,12 +123,3 @@ function calculate(text, v) {
 }
 
 
-function parsedata(text) {
-    return text.split("\n")
-        .map(e => {
-            let str = e.replace(/\s/g, '');
-            let val = str.split(";");
-
-            return { x: val[0], y: val[1] }
-        })
-}

@@ -50,6 +50,12 @@ function Build(data) {
         splines[i].b = hi * (2.0 * splines[i].c + splines[i - 1].c) / 6.0 + (y[i] - y[i - 1]) / hi;
     }
 
+    // досчитываем крайний коэффицент
+    let hi = x[0] - x[1];
+    splines[0].d = (splines[0].c - splines[1].c) / hi;
+    splines[0].b = hi * (2.0 * splines[0].c + splines[1].c) / 6.0 + (y[0] - y[1]) / hi;
+
+
     return splines;
 }
 
@@ -87,6 +93,7 @@ function Interpolate(x, splines) {
 
     var dx = x - s.x;
     // Вычисляем значение сплайна в заданной точке по схеме Горнера
+    // тут используется каноническая запись уравнения сплайна
     return s.a + (s.b + (s.c / 2.0 + s.d * dx / 6.0) * dx) * dx;
 }
 
