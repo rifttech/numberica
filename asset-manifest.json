@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/numberica/static/css/main.852a3dfb.chunk.css",
-    "main.js": "/numberica/static/js/main.b7a51706.chunk.js",
-    "main.js.map": "/numberica/static/js/main.b7a51706.chunk.js.map",
+    "main.js": "/numberica/static/js/main.6c1bd99a.chunk.js",
+    "main.js.map": "/numberica/static/js/main.6c1bd99a.chunk.js.map",
     "runtime-main.js": "/numberica/static/js/runtime-main.1ee030dc.js",
     "runtime-main.js.map": "/numberica/static/js/runtime-main.1ee030dc.js.map",
     "static/css/2.2bf4594e.chunk.css": "/numberica/static/css/2.2bf4594e.chunk.css",
@@ -21,6 +21,6 @@
     "static/css/2.2bf4594e.chunk.css",
     "static/js/2.044b8fc2.chunk.js",
     "static/css/main.852a3dfb.chunk.css",
-    "static/js/main.b7a51706.chunk.js"
+    "static/js/main.6c1bd99a.chunk.js"
   ]
 }
