@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { derrive } from "../commons/FiniteDifference";
-import { find } from "../commons/DifferenceTable"
 import ControlPoint from "../components/ControlPoint";
-import { round } from "../commons/utils";
-import { LineChart, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { round, parse } from "../commons/utils";
+import { interpolate } from "../commons/LagrangeInterpolation"
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Latex from "react-latex-next";
+
+//исходные данные задачи
 const initial = {
     data: [
         "0;0",
@@ -22,6 +25,7 @@ const initial = {
 }
 
 export default function Ex3() {
+    //изначальное состояние
     const [state, setState] = useState({
         text: initial.data.join("\n"),
         result: [],
@@ -32,10 +36,15 @@ export default function Ex3() {
         }
     });
 
+    // Прожимаем кнопку "расчитать" автоматически при монтировании компонента,
+    // чтобы пользователь сразу видел результы работы
+    const buttonRef = useRef();
+    useEffect(() => buttonRef.current.click(), []);
 
     return (<>
         <h1>3. Численное дифференцирование</h1>
         <h2>Формулы конечных разностей</h2>
+        <Latex>{` Общая формула: $$ {P}'(x)= \\frac{2x - x_1 - x_2} {(x_0-x_1)(x_0-x_2)}y_0 + \\frac{2x - x_0 - x_2}   {(x_1-x_0)(x_1-x_2)}y_1 + \\frac{2x - x_0 - x_1}   {(x_2-x_0)(x_2-x_2)}y_2$$`}</Latex>
         <div className="ex3_container">
             <div className="ex3_container__input">
                 <p>
@@ -47,45 +56,49 @@ export default function Ex3() {
                     onChange={(e) => setState(p => ({ ...p, text: e.target.value }))} />
 
                 <div>
-                    <button onClick={(e) => {
-                        let array = calculate(state.text);
+                    <button ref={buttonRef} onClick={(evt) => {
+                        try {
+                            let array = calculate(state.text);
+                            // зная табличные значения, интерполируем разностями
+                            let dots = array.map(e => Number(e.x));
+                            // функция
+                            let xy = array.map(e => ({ x: e.x, y: e.y }));
+                            // производные
+                            let dy = array.map(e => ({ x: e.x, y: e.fx }));
 
-                        // зная табличные значения, интерполируем разностями
-                        let dots = array.map(e => Number(e.x));
-                        // функция
-                        let xy = array.map(e => ({ x: e.x, y: e.y }));
-                        // производные
-                        let dy = array.map(e => ({ x: e.x, y: e.fx }));
-                        let it = 0;
-                        let plot = [];
-                        for (let i = 0; i < array.length - 1; i++) {
-                            let step = Math.abs(array[i].x - array[i + 1].x) / 10;
-                            let left = array[i].x;
-                            let right = array[i + 1].x;
-                            while (left < right + step || it > 10000) {
-                                let rl = round(left, 3)
-                                plot.push({ x: rl, y: find(rl, xy), fx: find(rl, dy), visible: dots.indexOf(rl) >= 0 });
-                                left += step;
-                                it++;
+                            let it = 0;
+                            let plot = [];
+                            for (let i = 0; i < array.length - 1; i++) {
+                                let step = Math.abs(array[i].x - array[i + 1].x) / 5;
+                                let left = array[i].x;
+                                let right = array[i + 1].x;
+                                while (left < right + step || it > 10000) {
+                                    let rl = round(left, 3)
+                                    plot.push({ x: rl, y: interpolate(rl, xy), fx: interpolate(rl, dy), visible: dots.indexOf(rl) >= 0 });
+                                    left += step;
+                                    it++;
+                                }
                             }
+
+                            setState(prev => ({
+                                ...prev, result: [...array], plot: {
+                                    data: [...plot],
+                                    min: dots[0],
+                                    max: dots[dots.length]
+                                }
+                            }))
+                        } catch (err) {
+                            console.log("При вычислении случилась ошибка", err);
+                            alert("Увы, что-то пошло нетак! Попробуй еще раз.")
                         }
-
-
-                        setState(prev => ({
-                            ...prev, result: [...array], plot: {
-                                data: [...plot],
-                                min: dots[0],
-                                max: dots[dots.length]
-                            }
-                        }))
                     }
                     }>Расчитать производные!</button>
                 </div>
 
             </div>
             <div className="ex3_container__main" style={{ display: "flex", flexDirection: "row" }}>
-
                 <div>
+                    {/* Вывод таблицы с производными */}
                     <table>
                         <tbody>
                             <tr>
@@ -107,6 +120,7 @@ export default function Ex3() {
                         </tbody>
                     </table>
                 </div>
+                {/* график */}
                 <ResponsiveContainer width="80%" height="50%">
                     <ComposedChart
                         width={500}
@@ -124,9 +138,11 @@ export default function Ex3() {
                         <YAxis />
                         <Tooltip />
                         <Legend />
+                        {/* оригинальная функция */}
                         <Line name="f(x)" type="monotone" dataKey="y" stroke="#8884d8"
                             dot={<ControlPoint />}
                         />
+                        {/* производная функции*/}
                         <Line name="f`(x)" type="monotone" dataKey="fx" stroke="#ff7300"
                             dot={<ControlPoint />}
                         />
@@ -138,36 +154,17 @@ export default function Ex3() {
 
 }
 
-
+/**
+ * Расчет производных
+ */
 function calculate(text) {
-    const roundTo = (number, digits) => {
-        let d = Math.pow(10, digits);
-        return Math.round((number + Number.EPSILON) * d) / d
+    let data = parse(text);
+    let rs = [];
+    for (let i = 0; i < data.length; i++) {
+        // находим производную отностительно 3 контрольных точек
+        // и записываем в массив
+        let fx = derrive(data, i);
+        rs.push({ x: data[i].x, y: data[i].y, fx: round(fx, 6) })
     }
-
-
-    try {
-        let data = parsedata(text);
-        let rs = [];
-        for (let i = 0; i < data.length; i++) {
-            let fx = derrive(data, i);
-            rs.push({ x: data[i].x, y: data[i].y, fx: roundTo(fx, 6) })
-        }
-        return rs;
-    } catch (err) {
-        console.log("При вычислении случилась ошибка", err);
-        alert("Увы, что-то пошло нетак! Попробуй еще раз.")
-    }
-
-}
-
-
-function parsedata(text) {
-    return text.split("\n")
-        .map(e => {
-            let str = e.replace(/\s/g, '');
-            let val = str.split(";");
-
-            return { x: Number(val[0]), y: Number(val[1]) }
-        })
+    return rs;
 }

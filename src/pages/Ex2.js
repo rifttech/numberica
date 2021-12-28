@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Build, Interpolate } from "./../commons/Spline";
-import { parse } from "../commons/utils";
-import ControlPoint from "../components/ControlPoint";
-import { LineChart, ComposedChart, Scatter, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-import { round } from "../commons/GaussianQuadrature";
+import { parse, round } from "../commons/utils";
 import Latex from "react-latex-next";
+import Plotter from "../components/Plotter";
+
+// исходные данные задачи
 const initial = {
     data: [
         "-100;4.06",
@@ -20,9 +19,8 @@ const initial = {
     ],
 }
 
-
-
 export default function Ex2() {
+    // начальные условия
     const [state, setState] = useState({
         text: initial.data.join("\n"),
         result: [],
@@ -30,11 +28,16 @@ export default function Ex2() {
         origin: [],
         eq: "",
         plot: {
+            data: [],
             min: -100,
             max: 100
         }
     });
 
+    // Прожимаем кнопку "расчитать" автоматически при монтировании компонента,
+    // чтобы пользователь сразу видел результы работы
+    const buttonRef = useRef();
+    useEffect(() => buttonRef.current.click(), [])
 
     return (<>
         <h1>3. Сплайны</h1>
@@ -48,57 +51,37 @@ export default function Ex2() {
                     onChange={(e) => setState(p => ({ ...p, text: e.target.value }))} />
 
                 <div>
-                    <button onClick={(e) => {
+                    <button ref={buttonRef} onClick={(e) => {
                         let r = calculate(state.text, state.step);
-                        setState(prev => ({ ...prev, result: [...r.plot], origin: [...r.origin], eq: r.equation }))
+                        setState(prev => ({
+                            ...prev,
+                            plot: { ...prev.plot, data: [...r.plot] },
+                            origin: [...r.origin],
+                            eq: r.equation
+                        }))
                     }}>Расчитать!</button>
                 </div>
 
             </div>
             <div className="ex2_container__main">
                 <div style={{ height: "300px" }}>
-                    <ResponsiveContainer width="80%">
-                        <ComposedChart
-                            width={500}
-                            height={300}
-                            data={state.result}
-                            margin={{
-                                top: 5,
-                                right: 30,
-                                left: 20,
-                                bottom: 5,
-                            }}
-                        >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis type="number" dataKey="x" domain={[state.plot.min - 5, state.plot.max + 5]} />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Line name="Кубический сплайн S(x)" type="monotone" dataKey="y" stroke="#8884d8"
-                                dot={<ControlPoint />}
-                            />
-                        </ComposedChart>
-                    </ResponsiveContainer>
+                    <Plotter lineName={"Кубический сплайн S(x)"} plot={state.plot} />
                 </div>
                 <div>
                     <Latex>{state.eq}</Latex>
                 </div>
-
             </div>
 
         </div>
     </>)
-
 }
 
-
-
+// Касчет сплайна
 function calculate(text, step) {
     try {
         let data = parse(text);
         let sp = Build(data);
         // крайнее левое и правое пложение сетки
-        console.log(sp)
         let left = Number(data[0].x)
         let right = Number(data[data.length - 1].x)
         let dots = data.map(e => Number(e.x));
@@ -122,7 +105,7 @@ function calculate(text, step) {
 
 }
 
-
+// вывод формулы сплайна
 function buildEquation(sp) {
     let sign = (x, d) => {
         if (x < 0 || d) {

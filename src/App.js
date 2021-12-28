@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  BrowserRouter as Router,
+  HashRouter,
   Routes,
   Route,
   Link
@@ -14,42 +14,38 @@ import Ex4 from './pages/Ex4';
 function App() {
   return (
     <div className="App">
-      <Router>
+      <HashRouter>
         <div>
           <ul>
             <li>
-              <Link to="/numberica/ex1">1.Задача 1.2</Link>
+              <Link to="/ex1">1.Задача 1.2</Link>
             </li>
             <li>
-              <Link to="/numberica/ex2">2.Задача 2.2</Link>
+              <Link to="/ex2">2.Задача 2.2</Link>
             </li>
             <li>
-              <Link to="/numberica/ex3">3.Задача 3.2</Link>
+              <Link to="/ex3">3.Задача 3.2</Link>
             </li>
             <li>
-              <Link to="/numberica/ex4">4.Задача 4.3</Link>
+              <Link to="/ex4">4.Задача 4.3</Link>
             </li>
           </ul>
           <hr />
         </div>
         <Routes>
-          <Route path="/numberica/ex1" element={<Ex1 />} />
-          <Route path="/numberica/ex2" element={<Ex2 />} />
-          <Route path="numberica/ex3" element={<Ex3 />} />
-          <Route path="/numberica/ex4" element={<Ex4 />} />
-          <Route path="/numberica/" element={<Home />} />
+          <Route path="/ex1" element={<Ex1 />} />
+          <Route path="/ex2" element={<Ex2 />} />
+          <Route path="/ex3" element={<Ex3 />} />
+          <Route path="/ex4" element={<Ex4 />} />
+          <Route path="/" element={<Home />} />
         </Routes>
-      </Router>
+      </HashRouter>
     </div>
   );
 }
 
-
-
-
 function Home() {
   return (<></>);
 }
-
 
 export default App;

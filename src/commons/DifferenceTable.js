@@ -9,28 +9,47 @@ export default class DifferenceTable {
     }
 }
 
-// расчет таблицы разностей
-function init(diff, data, count) {
+/**
+ * Инициализация таблицы разностей
+ * @param diff таблица разностей
+ * @param data исходный массив, по которому вычисляются разности
+ * @param n определяет глубину расчета разностей
+ */
+function init(diff, data, n) {
     // console.log("data: " + data,"|", count, "| length:", data.length);
-    if (count <= 0) {
+    // услровие выхода из рекурсии
+    if (n <= 0) {
         return;
     }
+
+    // расчитываем n-тые разности.
+    // записываем их в таблицу
     let tmp = [];
     for (let i = 0; i < data.length - 1; i++) {
         tmp.push(data[i + 1] - data[i]);
     }
     diff.push(tmp);
-    init(diff, tmp, count - 1);
+
+    // реккурсивный вызов, считаем разности более высокого порядка
+    init(diff, tmp, n - 1);
 }
 
-let factorial = [0, 1, 2, 6, 24, 120]
+// чтобы не тратить время на расчет факториала, запишем сразу его значения для некторых его значений
+let factorial = [0, 1, 2, 6, 24, 120];
 
-function find(x, data) {
-    //инициализируем таблицу разностей
-    let table = new DifferenceTable(data.map(e => e.y));
+/**
+ * Интерполирует f(x)
+ */
+function interpolate(x, data, table) {
     //за х0 принимаем первый узел
     let x0 = Number(data[0].x);
     let y0 = Number(data[0].y);
+
+    let index = 0;
+    while (data[index] < x && index < 100) {
+        index++;
+    }
+
     let h = Math.abs(Number(data[1].x) - Number(data[0].x));
     let q = (x - x0) / h
     let result = y0;
@@ -42,6 +61,7 @@ function find(x, data) {
 }
 
 // расчет коэфицента к разности
+// имеется ввиду последовательность q(q-1)(q-2)...(q -n)
 function calcQ(val, i) {
     let r = 1;
     for (let j = i; j >= 0; j--) {
@@ -52,5 +72,5 @@ function calcQ(val, i) {
 
 
 export {
-    find
+    interpolate
 }

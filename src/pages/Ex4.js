@@ -1,18 +1,19 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Parser } from 'expr-eval';
-import * as GQ from "./../commons/GaussianQuadrature";
+import { integrate, Table } from "./../commons/GaussianQuadrature";
 import 'katex/dist/katex.min.css'
 import Latex from 'react-latex-next'
-
-
+import { round as rnd } from "./../commons/utils";
 const parser = new Parser();
 
 export default function Ex4() {
+    // исходное состояние
     const [data, setData] = useState({
         fn: "sin(x)",
         a: "0",
         b: "pi",
+        n: 10,
         aeval: 0,
         beval: 0,
         round: 0,
@@ -20,6 +21,12 @@ export default function Ex4() {
         graph: []
     });
 
+    // Прожимаем кнопку "расчитать" автоматически при монтировании компонента,
+    // чтобы пользователь сразу видел результы работы
+    const buttonRef = useRef();
+    useEffect(() => buttonRef.current.click(), []);
+
+    // вычисление интеграла
     let calc = ({ fn, a, b, round }) => {
         try {
             let fnexr = parser.parse(fn);
@@ -31,13 +38,9 @@ export default function Ex4() {
                 return exr.evaluate({ x: x })
             };
             let temp = [];
-            for (let i = 2; i < 8; i++) {
-
-
-
-                let raw = GQ.integrate(func(fnexr), evA, evB, i)
-                temp.push({ id: i, val: raw });
-            }
+            let n = minmax(data.n, 2, 10)
+            let raw = integrate(func(fnexr), evA, evB, n);
+            temp.push({ id: n, val: raw });
 
             let it = 0;
             let step = (evB - evA) / 100;
@@ -61,25 +64,15 @@ export default function Ex4() {
         }
     };
 
-
-
     return (
         <>
             <h1>4. Численное интегрирование</h1>
             <h2>Квадратуры Гаусса</h2>
+            <Latex>{'$$ I = \\int_{a}^{b}f(x)dx = \\sum_{i=0}^{n}w_if(x_i) $$'}</Latex>
             <div>
-                <label>
-                    f(x) =
-                    <input type='text' value={data.fn} onChange={e => setData(p => ({ ...p, fn: e.target.value }))} />
-                </label>
-                <label style={{ marginLeft: "10px" }}>
-                    a=
-                    <input type='text' value={data.a} onChange={e => setData(p => ({ ...p, a: e.target.value }))} />
-                </label>
-                <label style={{ marginLeft: "10px" }}>
-                    b=
-                    <input type='text' value={data.b} onChange={e => setData(p => ({ ...p, b: e.target.value }))} />
-                </label>
+                <TextInput label={"f(x)="} value={data.fn} onChange={value => setData(prev => ({ ...prev, fn: value }))} />
+                <TextInput label={"a="} value={data.a} onChange={value => setData(prev => ({ ...prev, a: value }))} />
+                <TextInput label={"b="} value={data.b} onChange={value => setData(prev => ({ ...prev, b: value }))} />
                 <label style={{ marginLeft: "10px" }}>
                     Округлять до:
                     <select name="select" onChange={(e) => {
@@ -95,20 +88,53 @@ export default function Ex4() {
                         <option value="8">8 знаков</option>
                     </select>
                 </label>
+                <TextInput label={"n="} value={data.n} onChange={value => setData(prev => ({ ...prev, n: Number(value) }))} />
             </div>
-
-            <button style={{ marginLeft: "5px", marginTop: "20px" }} onClick={() => calc(data)}>Расчитать!</button>
-
+            <button ref={buttonRef} style={{ marginLeft: "5px", marginTop: "20px" }} onClick={() => calc(data)}>Расчитать!</button>
             <h3>Результы выполнения:</h3>
             <hr />
-            {
-                data.result.map(e => {
-                    return (
-                        <Latex key={e.id}>{`$$ I = ${coefs(data.a, data.b)[0]}\\sum_{i=0}^{${e.id}}{w_if\\left(${coefs(data.a, data.b)[0]}z_i+${coefs(data.a, data.b)[1]}\\right)} =${GQ.round(e.val, parseInt(data.round))} $$ `}</Latex>
-                    )
-                })
-            }
-
+            <div>
+                <div>
+                    {
+                        data.result.map(e => {
+                            const { a, b, round } = data;
+                            let first = rnd(coefs(a, b)[0], round);
+                            let second = rnd(coefs(a, b)[0], round);
+                            let third = rnd(coefs(data.a, data.b)[1], round);
+                            let result = rnd(e.val, round)
+                            return (
+                                <Latex key={e.id}>{`$$ I = ${first}\\sum_{i=0}^{${e.id}}{w_if\\left(${second}z_i+${third}\\right)} =${result} $$ `}</Latex>
+                            )
+                        })
+                    }
+                </div>
+                <div>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <Latex>{'$$ w_i $$'}</Latex>
+                                </td>
+                                <td>
+                                    <Latex>{'$$ z_i $$'}</Latex>
+                                </td>
+                            </tr>
+                            {/* Выводим корни и коэффиценты */}
+                            {
+                                Table[minmax(data.n, 2, 10)]
+                                    .map((e, i) => {
+                                        return (
+                                            <tr key={i}>
+                                                <td>{e[1]}</td>
+                                                <td>{e[0]}</td>
+                                            </tr>
+                                        )
+                                    })
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </>
     )
 }
@@ -123,4 +149,17 @@ function coefs(a, b) {
         (bound[1] - bound[0]) / 2,
         (bound[1] + bound[0]) / 2
     ]
+}
+
+function TextInput({ label, value, onChange }) {
+    return (
+        <label>
+            {label}
+            <input type='text' value={value} onChange={e => onChange(e.target.value)} />
+        </label>
+    );
+}
+
+function minmax(value, min, max) {
+    return Math.min(Math.max(value, min), max);
 }
