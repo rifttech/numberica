@@ -41,6 +41,7 @@ export default function Ex3() {
     const buttonRef = useRef();
     useEffect(() => buttonRef.current.click(), []);
 
+    //рендер
     return (<>
         <h1>3. Численное дифференцирование</h1>
         <h2>Формулы конечных разностей</h2>

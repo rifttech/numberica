@@ -4,7 +4,7 @@ function parse(text) {
             let str = e.replace(/\s/g, '');
             let val = str.split(";");
 
-            return { x: val[0], y: val[1] }
+            return { x: Number(val[0]), y: Number(val[1]) }
         })
 }
 
