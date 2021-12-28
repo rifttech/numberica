@@ -34,7 +34,7 @@ export default function Ex1() {
         }
     });
 
-    // Прожимаем кнопку "расчитать" автоматически при монтировании компонента,
+    // Прожимаем кнопку "расcчитать" автоматически при монтировании компонента,
     // чтобы пользователь сразу видел результы работы
     const buttonRef = useRef();
     useEffect(() => buttonRef.current.click(), []);
@@ -54,7 +54,7 @@ export default function Ex1() {
                     <label>
                         f(
                         <input type='text' value={state.value} onChange={e => setState(p => ({ ...p, value: e.target.value }))} />
-                        ) = {state.result === undefined ? "<не расчитано>" : round(state.result, 5)}
+                        ) = {state.result === undefined ? "<не раcсчитано>" : round(state.result, 5)}
                     </label>
                 </div>
                 <div>
@@ -74,7 +74,7 @@ export default function Ex1() {
                                 let step = Math.abs(dots[i] - dots[i + 1]) / 10;
                                 let left = dots[i];
                                 let right = dots[i + 1];
-                                // расчитываем для графика точки
+                                // раcсчитываем для графика точки
                                 // добавим еще условие выхода из цикла если итераций больше 10к
                                 while (left < right + step || it > 10000) {
                                     plot.push({ x: left, y: interpolate(left, data, table), visible: dots.indexOf(left) >= 0 });
@@ -97,10 +97,10 @@ export default function Ex1() {
                             }))
                         } catch (error) {
                             console.log("При вычислении случилась ошибка", error);
-                            alert("Увы, что-то пошло нетак! Попробуй еще раз.")
+                            alert("Увы, что-то пошло не так! Попробуй еще раз.")
                         }
                     }
-                    }>Расчитать!</button>
+                    }>Раcсчитать!</button>
                 </div>
 
             </div>

@@ -34,7 +34,7 @@ export default function Ex2() {
         }
     });
 
-    // Прожимаем кнопку "расчитать" автоматически при монтировании компонента,
+    // Прожимаем кнопку "рассчитать" автоматически при монтировании компонента,
     // чтобы пользователь сразу видел результы работы
     const buttonRef = useRef();
     useEffect(() => buttonRef.current.click(), [])
@@ -59,7 +59,7 @@ export default function Ex2() {
                             origin: [...r.origin],
                             eq: r.equation
                         }))
-                    }}>Расчитать!</button>
+                    }}>Рассчитать!</button>
                 </div>
 
             </div>
@@ -76,12 +76,12 @@ export default function Ex2() {
     </>)
 }
 
-// Касчет сплайна
+// Расчет сплайна
 function calculate(text, step) {
     try {
         let data = parse(text);
         let sp = Build(data);
-        // крайнее левое и правое пложение сетки
+        // крайнее левое и правое положение сетки
         let left = Number(data[0].x)
         let right = Number(data[data.length - 1].x)
         let dots = data.map(e => Number(e.x));
@@ -100,7 +100,7 @@ function calculate(text, step) {
 
     } catch (err) {
         console.log("При вычислении случилась ошибка", err);
-        alert("Увы, что-то пошло нетак! Попробуй еще раз.")
+        alert("Увы, что-то пошло не так! Попробуй еще раз.")
     }
 
 }

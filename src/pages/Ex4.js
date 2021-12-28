@@ -91,7 +91,7 @@ export default function Ex4() {
                 <TextInput label={"n="} value={data.n} onChange={value => setData(prev => ({ ...prev, n: Number(value) }))} />
             </div>
             <button ref={buttonRef} style={{ marginLeft: "5px", marginTop: "20px" }} onClick={() => calc(data)}>Расчитать!</button>
-            <h3>Результы выполнения:</h3>
+            <h3>Результаты выполнения:</h3>
             <hr />
             <div>
                 <div>
@@ -139,6 +139,7 @@ export default function Ex4() {
     )
 }
 
+//cчитаем (a-b)/2 и (a+b)/2
 function coefs(a, b) {
     let bound = [
         parser.parse(a.toUpperCase()).evaluate(),

@@ -20,7 +20,7 @@ function closest(x, data) {
 
 function interpolate(x, data) {
     let center = closest(x, data);
-    // выделяем узел от которого будем отчитывать узлы из контрольных точек
+    // выделяем узел, от которого будем отсчитывать узлы из контрольных точек
     if (center === data.length - 1) {
         center = data.length - 3
     } else if (center === 0) {
