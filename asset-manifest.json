@@ -1,26 +1,26 @@
 {
   "files": {
     "main.css": "/numberica/static/css/main.852a3dfb.chunk.css",
-    "main.js": "/numberica/static/js/main.1f287848.chunk.js",
-    "main.js.map": "/numberica/static/js/main.1f287848.chunk.js.map",
+    "main.js": "/numberica/static/js/main.31642128.chunk.js",
+    "main.js.map": "/numberica/static/js/main.31642128.chunk.js.map",
     "runtime-main.js": "/numberica/static/js/runtime-main.1ee030dc.js",
     "runtime-main.js.map": "/numberica/static/js/runtime-main.1ee030dc.js.map",
     "static/css/2.2bf4594e.chunk.css": "/numberica/static/css/2.2bf4594e.chunk.css",
-    "static/js/2.58b43a6e.chunk.js": "/numberica/static/js/2.58b43a6e.chunk.js",
-    "static/js/2.58b43a6e.chunk.js.map": "/numberica/static/js/2.58b43a6e.chunk.js.map",
+    "static/js/2.6e61186a.chunk.js": "/numberica/static/js/2.6e61186a.chunk.js",
+    "static/js/2.6e61186a.chunk.js.map": "/numberica/static/js/2.6e61186a.chunk.js.map",
     "static/js/3.21c1527e.chunk.js": "/numberica/static/js/3.21c1527e.chunk.js",
     "static/js/3.21c1527e.chunk.js.map": "/numberica/static/js/3.21c1527e.chunk.js.map",
     "index.html": "/numberica/index.html",
     "static/css/2.2bf4594e.chunk.css.map": "/numberica/static/css/2.2bf4594e.chunk.css.map",
     "static/css/main.852a3dfb.chunk.css.map": "/numberica/static/css/main.852a3dfb.chunk.css.map",
-    "static/js/2.58b43a6e.chunk.js.LICENSE.txt": "/numberica/static/js/2.58b43a6e.chunk.js.LICENSE.txt",
+    "static/js/2.6e61186a.chunk.js.LICENSE.txt": "/numberica/static/js/2.6e61186a.chunk.js.LICENSE.txt",
     "static/media/katex.min.css": "/numberica/static/media/KaTeX_Typewriter-Regular.c5c02d76.ttf"
   },
   "entrypoints": [
     "static/js/runtime-main.1ee030dc.js",
     "static/css/2.2bf4594e.chunk.css",
-    "static/js/2.58b43a6e.chunk.js",
+    "static/js/2.6e61186a.chunk.js",
     "static/css/main.852a3dfb.chunk.css",
-    "static/js/main.1f287848.chunk.js"
+    "static/js/main.31642128.chunk.js"
   ]
 }
