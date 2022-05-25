@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Build, Interpolate } from "./../commons/Spline";
+import { BuildSpline, Spline } from "./../commons/Spline";
 import { parse, round } from "../commons/utils";
 import Latex from "react-latex-next";
 import Plotter from "../components/Plotter";
@@ -80,7 +80,7 @@ export default function Ex2() {
 function calculate(text, step) {
     try {
         let data = parse(text);
-        let sp = Build(data);
+        let sp = BuildSpline(data);
         // крайнее левое и правое положение сетки
         let left = Number(data[0].x)
         let right = Number(data[data.length - 1].x)
@@ -88,7 +88,7 @@ function calculate(text, step) {
         let rs = [];
 
         while (left < right + 0.1) {
-            rs.push({ x: left, y: Interpolate(left, sp), visible: dots.indexOf(left) >= 0 })
+            rs.push({ x: left, y: Spline(sp, left), visible: dots.indexOf(left) >= 0 })
             left += step;
         }
 
@@ -107,20 +107,19 @@ function calculate(text, step) {
 
 // вывод формулы сплайна
 function buildEquation(sp) {
-    let sign = (x, d) => {
-        if (x < 0 || d) {
+    let sign = (x, d = "+") => {
+        if (x < 0) {
             return '+' + Math.abs(x);
         } else if (x > 0) {
             return '-' + Math.abs(x);
         } else {
-            return "";
+            return d;
         }
     }
-    let eq = ({ a, b, c, d, x }, x1) => `${round(a, 5)}${sign(round(b, 5), '+')}\\left(x${sign(x)}\\right)${sign(round(c / 2, 5), '+')}\\left(x${sign(x)}\\right)^2${sign(round(d / 6, 5), '+')}\\left(x${sign(x)}\\right)^3,x\\in\\left[${x},${x1}\\right] \\\\  `;
-
+    let eq = (r) => `${r[0]}x^3 ${sign(r[1])}x^2 ${sign(r[2])}x ${sign(r[3])} ,x\\in\\left[${r[4]},${r[5]}\\right] \\\\`
     let eqs = ""
-    for (let i = 0; i < sp.length - 1; i++) {
-        eqs += eq(sp[i], sp[i + 1].x)
+    for (let i = 0; i < sp.length; i++) {
+        eqs += eq(sp[i])
     }
 
     return `$$

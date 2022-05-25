@@ -24,7 +24,7 @@ export default function Ex4() {
     // Прожимаем кнопку "расчитать" автоматически при монтировании компонента,
     // чтобы пользователь сразу видел результы работы
     const buttonRef = useRef();
-    useEffect(() => buttonRef.current.click(), []);
+    // useEffect(() => buttonRef.current.click(), []);
 
     // вычисление интеграла
     let calc = ({ fn, a, b, round }) => {
@@ -97,14 +97,20 @@ export default function Ex4() {
                 <div>
                     {
                         data.result.map(e => {
+
                             const { a, b, round } = data;
-                            let first = rnd(coefs(a, b)[0], round);
-                            let second = rnd(coefs(a, b)[0], round);
-                            let third = rnd(coefs(data.a, data.b)[1], round);
-                            let result = rnd(e.val, round)
-                            return (
-                                <Latex key={e.id}>{`$$ I = ${first}\\sum_{i=0}^{${e.id}}{w_if\\left(${second}z_i+${third}\\right)} =${result} $$ `}</Latex>
-                            )
+                            if (a && b) {
+                                let first = rnd(coefs(a, b)[0], round);
+                                let second = rnd(coefs(a, b)[0], round);
+                                let third = rnd(coefs(data.a, data.b)[1], round);
+                                let result = rnd(e.val, round)
+                                return (
+                                    <Latex key={e.id}>{`$$ I = ${first}\\sum_{i=0}^{${e.id}}{w_if\\left(${second}z_i+${third}\\right)} =${result} $$ `}</Latex>
+                                )
+                            } else {
+                                return <></>
+                            }
+
                         })
                     }
                 </div>

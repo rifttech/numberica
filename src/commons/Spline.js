@@ -1,102 +1,173 @@
+import gauss from "gaussian-elimination";
+
+/**
+ * построить сплайн
+ * принимает узлы
+ */
+export function BuildSpline(points) {
+
+    let knots = points.length - 1;
+    let matrix = newZeroMatrix(knots);
+    console.log(points);
 
 
+    for (let i = 0; i < knots; i++) {
+        // основные уравнения 2n
+        fill(matrix[2 * i], points[i].x, points[i].y, i);
+        fill(matrix[2 * i + 1], points[i + 1].x, points[i + 1].y, i);
 
-function Build(data) {
-    let x = []
-    let y = []
-    for (let i = 0; i < data.length; i++) {
-        x.push(Number(data[i].x))
-        y.push(Number(data[i].y))
+        // первые производные n - 1
+        if (i > 0) fillD1(matrix, points, i, knots);
+        // вторые производные n - 1
+        if (i > 0) fillD2(matrix, points, i, knots);
     }
 
-    let splines = [];
+    // условия натурального сплайна, еще 2 уравнения
+    matrix[matrix.length - 2][0] = 6 * points[0].x;
+    matrix[matrix.length - 2][1] = 2;
 
-    for (let i = 0; i < x.length; i++) {
-        splines.push({ a: null, b: null, c: null, d: null, x: null });
-    }
-    // var splines = new Array(X.length).fill({a:null,b:null,c:null,d:null,x:null});
-    const n = x.length;
-    for (let i = 0; i < n; i++) {
-        splines[i].x = x[i];
-        splines[i].a = y[i];
-    }
-    splines[0].c = splines[n - 1].c = 0;
+    matrix[matrix.length - 1][matrix[0].length - 5] = 6 * points[points.length - 1].x;
+    matrix[matrix.length - 1][matrix[0].length - 4] = 2;
 
-    // Решение СЛАУ относительно коэффициентов сплайнов c[i] методом прогонки для трехдиагональных матриц
-    // Вычисление прогоночных коэффициентов - прямой ход метода прогонки
-    var alpha = new Array(n - 1).fill(0);
-    var beta = new Array(n - 1).fill(0);
-    for (let i = 1; i < n - 1; ++i) {
-        let hi = x[i] - x[i - 1];
-        var hi1 = x[i + 1] - x[i];
-        var A = hi;
-        var C = 2.0 * (hi + hi1);
-        var B = hi1;
-        var F = 6.0 * ((y[i + 1] - y[i]) / hi1 - (y[i] - y[i - 1]) / hi);
-        var z = (A * alpha[i - 1] + C);
-        alpha[i] = -B / z;
-        beta[i] = (F - A * beta[i - 1]) / z;
+    console.log(matrix.map(e => e.join(" ")))
+
+    // находим коэффициенты
+    let coefs = solveMatrix(matrix);
+    console.log(coefs);
+    // разделяем уравнения по 4 коффициента
+    let result = []
+    const chunkSize = 4;
+    for (let i = 0; i < coefs.length; i += chunkSize) {
+        const chunk = coefs.slice(i, i + chunkSize);
+        result.push(chunk.map(e => e));
     }
 
-    // Нахождение решения - обратный ход метода прогонки
-    for (let i = n - 2; i > 0; --i) {
-        splines[i].c = alpha[i] * splines[i + 1].c + beta[i];
+    // добавляем границы [x(i) ; x(i+1)]
+    for (let i = 0; i < result.length; i++) {
+        result[i].push(points[i].x)
+        result[i].push(points[i + 1].x)
     }
 
-    // По известным коэффициентам c[i] находим значения b[i] и d[i]
-    for (let i = n - 1; i > 0; --i) {
-        let hi = x[i] - x[i - 1];
-        splines[i].d = (splines[i].c - splines[i - 1].c) / hi;
-        splines[i].b = hi * (2.0 * splines[i].c + splines[i - 1].c) / 6.0 + (y[i] - y[i - 1]) / hi;
-    }
-
-    // досчитываем крайний коэффицент
-    let hi = x[0] - x[1];
-    splines[0].d = (splines[0].c - splines[1].c) / hi;
-    splines[0].b = hi * (2.0 * splines[0].c + splines[1].c) / 6.0 + (y[0] - y[1]) / hi;
-
-
-    return splines;
+    return result;
 }
 
-function Interpolate(x, splines) {
-    if (splines == null) {
-        return NaN; // Если сплайны ещё не построены - возвращаем NaN
-    }
-
-    const n = splines.length;
-    var s = { a: null, b: null, c: null, d: null, x: null };
-
-    if (x <= splines[0].x) // Если x меньше точки сетки x[0] - пользуемся первым эл-тов массива
-    {
-        s = splines[0];
-    }
-    else if (x >= splines[n - 1].x) // Если x больше точки сетки x[n - 1] - пользуемся последним эл-том массива
-    {
-        s = splines[n - 1];
-    }
-    else // Иначе x лежит между граничными точками сетки - производим бинарный поиск нужного эл-та массива
-    {
-        var i = 0;
-        var j = n - 1;
-        while (i + 1 < j) {
-            var k = i + (j - i) / 2;
-            if (x <= splines[k].x) {
-                j = k;
-            }
-            else {
-                i = k;
-            }
+/**
+ * 
+ * @param {*} coefs 
+ * @param {*} x 
+ */
+export function Spline(coefs, x) {
+    let d = 0;
+    for (let i = 0; i < coefs.length; i++) {
+        let inclusive = coefs.length - 1 == i;
+        if (range(coefs[i][coefs[i].length - 2], coefs[i][coefs[i].length - 1], x, inclusive)) {
+            d = i;
+            break;
         }
-        s = splines[j];
     }
-
-    var dx = x - s.x;
-    // Вычисляем значение сплайна в заданной точке по схеме Горнера
-    // тут используется каноническая запись уравнения сплайна
-    return s.a + (s.b + (s.c / 2.0 + s.d * dx / 6.0) * dx) * dx;
+    console.log(d);
+    let c = coefs[d];
+    return c[0] * x * x * x + c[1] * x * x + c[2] * x + c[3];
 }
 
-export {
-    Build, Interpolate
+
+function range(a, b, x, inclusive) {
+    console.log(a, b, x);
+    return (!inclusive) ? (x >= a && x < b) : (x >= a && x <= b);
+}
+
+function fill(row, x, y, i) {
+    let offset = 4 * (i < 1 ? 0 : i); // определяем номер столбца
+
+    row[offset + 3] = 1 // d
+    row[offset + 2] = x // c
+    row[offset + 1] = row[offset + 2] * x // b
+    row[offset] = row[offset + 1] * x // a
+
+    row[row.length - 1] = y //y;
+}
+
+function fillD1(matrix, points, i, knots) {
+    let r = (2 * knots - 1) + i
+    let m = 4 * (i - 1);
+    let n = 4 * i;
+    let x = points[i].x;
+    //console.log(r);
+    matrix[r][m] = 3 * x * x // a_i
+    matrix[r][m + 1] = 2 * x // b_i
+    matrix[r][m + 2] = 1 // c_i
+
+    matrix[r][n] = -3 * x * x // a_i+1
+    matrix[r][n + 1] = -2 * x // b_i+1
+    matrix[r][n + 2] = -1 // c_i+1
+
+    matrix[r][matrix[r].length - 1] = 0 //y;
+}
+
+function fillD2(matrix, points, i, knots) {
+    let r = ((2 * knots - 1) + i) + (knots - 1)
+    let m = 4 * (i - 1);
+    let n = 4 * i;
+    let x = points[i].x;
+    //console.log(r);
+    matrix[r][m] = 6 * x // a_i
+    matrix[r][m + 1] = 2 // b_i
+
+
+    matrix[r][n] = -6 * x // a_i+1
+    matrix[r][n + 1] = -2// b_i+1
+
+
+    matrix[r][matrix[r].length - 1] = 0 //y;
+}
+
+/**
+ * Инициализируем строку матрицы
+ * Количество столбцов равно 4n + 1, n - кол-во узлов
+ * @param {Array} matrix матрица
+ * @param {Number} n количество столбцов
+ */
+function newZeroMatrix(n) {
+    let matrix = [];
+    for (let i = 0; i < 4 * n; i++) {
+        matrix.push([])
+        for (let j = 0; j < 4 * n + 1; j++) {
+            matrix[i].push(0);
+        }
+    }
+    return matrix;
+}
+
+function solveMatrix(m) {
+    var len = m.length;
+
+    for (var i = 0; i < len; i++) { // column
+        for (var j = i + 1; j < len; j++) { // row
+            if (m[i][i] == 0) { // check if cell is zero
+                var k = i;
+
+                // search for an element where this cell is not zero
+                while (m[k][i] == 0) k++;
+
+                // swap rows
+                var tmp = m[k].slice();
+                m[k] = m[i].slice();
+                m[i] = tmp.slice();
+            }
+
+            var fac = -m[j][i] / m[i][i];
+            for (var k = i; k < len + 1; k++) // elements in a row
+                m[j][k] += fac * m[i][k];
+        }
+    }
+
+    var solution = [];
+    for (var i = len - 1; i >= 0; i--) { // column
+        solution.unshift(m[i][len] / m[i][i]);
+        for (var k = i - 1; k >= 0; k--) {
+            m[k][len] -= m[k][i] * solution[0];
+        }
+    }
+
+    return solution;
 }
