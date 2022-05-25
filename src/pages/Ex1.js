@@ -83,6 +83,10 @@ export default function Ex1() {
                                 }
                             }
 
+                      
+
+                            
+
                             //изменем состояние компонента
                             setState(prev => ({
                                 ...prev, result: array,
@@ -105,7 +109,10 @@ export default function Ex1() {
 
             </div>
             <div className="ex3_container__main">
-                <Plotter plot={state.plot} lineName={"Интерполянт P(x)"} />
+                <Plotter plot={state.plot} 
+                     lineName={"Интерполянт P(x)"} 
+                     extra={[{x : state.value, y:state.result}]}
+                     />
             </div>
         </div>
         {/* вывод таблицы разностей */}
@@ -114,6 +121,8 @@ export default function Ex1() {
         </div>
     </>)
 }
+
+
 
 /**
  * Вывод формулы для интерполяции вперед по 5м разностям
