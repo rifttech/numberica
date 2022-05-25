@@ -9,50 +9,38 @@ export function BuildSpline(points) {
     let knots = points.length - 1;
     let matrix = newZeroMatrix(knots);
     console.log(points);
+    fillMatrix(matrix, points, knots);
+    // console.log(matrix.map(e => e.join(" ")))
+    // находим коэффициенты
+    let coefs = gauss(matrix);
+    //console.log(coefs);
+    // разделяем уравнения по 4 коффициента
+    return prepareResult(coefs, points);
+}
 
 
+function fillMatrix(matrix, points, knots){
     for (let i = 0; i < knots; i++) {
         // основные уравнения 2n
         fill(matrix[2 * i], points[i].x, points[i].y, i);
         fill(matrix[2 * i + 1], points[i + 1].x, points[i + 1].y, i);
 
         // первые производные n - 1
-        if (i > 0) fillD1(matrix, points, i, knots);
         // вторые производные n - 1
-        if (i > 0) fillD2(matrix, points, i, knots);
+
+        if (i > 0){
+            fillD1(matrix, points, i, knots);
+            fillD2(matrix, points, i, knots);
+        } 
     }
 
     // условия натурального сплайна, еще 2 уравнения
-    matrix[matrix.length - 2][0] = 6 * points[0].x;
-    matrix[matrix.length - 2][1] = 2;
-
-    matrix[matrix.length - 1][matrix[0].length - 5] = 6 * points[points.length - 1].x;
-    matrix[matrix.length - 1][matrix[0].length - 4] = 2;
-
-    console.log(matrix.map(e => e.join(" ")))
-
-    // находим коэффициенты
-    let coefs = solveMatrix(matrix);
-    console.log(coefs);
-    // разделяем уравнения по 4 коффициента
-    let result = []
-    const chunkSize = 4;
-    for (let i = 0; i < coefs.length; i += chunkSize) {
-        const chunk = coefs.slice(i, i + chunkSize);
-        result.push(chunk.map(e => e));
-    }
-
-    // добавляем границы [x(i) ; x(i+1)]
-    for (let i = 0; i < result.length; i++) {
-        result[i].push(points[i].x)
-        result[i].push(points[i + 1].x)
-    }
-
-    return result;
+    fillEndSplineCondition(matrix, points);
 }
 
+
 /**
- * 
+ * Вычисляем значение в точке x
  * @param {*} coefs 
  * @param {*} x 
  */
@@ -70,12 +58,22 @@ export function Spline(coefs, x) {
     return c[0] * x * x * x + c[1] * x * x + c[2] * x + c[3];
 }
 
-
+/**
+ * Определение границ использования одной из функций сплайна
+ * @param {*} a 
+ * @param {*} b 
+ * @param {*} x 
+ * @param {*} inclusive 
+ * @returns 
+ */
 function range(a, b, x, inclusive) {
     console.log(a, b, x);
     return (!inclusive) ? (x >= a && x < b) : (x >= a && x <= b);
 }
 
+/**
+ * Добавление основых уравнений в матрицу
+ */
 function fill(row, x, y, i) {
     let offset = 4 * (i < 1 ? 0 : i); // определяем номер столбца
 
@@ -86,7 +84,13 @@ function fill(row, x, y, i) {
 
     row[row.length - 1] = y //y;
 }
-
+/**
+ * Добавление уравнений в матрицу - первые прозводные
+ * @param {*} matrix 
+ * @param {*} points 
+ * @param {*} i 
+ * @param {*} knots 
+ */
 function fillD1(matrix, points, i, knots) {
     let r = (2 * knots - 1) + i
     let m = 4 * (i - 1);
@@ -104,6 +108,13 @@ function fillD1(matrix, points, i, knots) {
     matrix[r][matrix[r].length - 1] = 0 //y;
 }
 
+/**
+ * Добавление уравнений в матрицу - вторые прозводные
+ * @param {*} matrix 
+ * @param {*} points 
+ * @param {*} i 
+ * @param {*} knots 
+ */
 function fillD2(matrix, points, i, knots) {
     let r = ((2 * knots - 1) + i) + (knots - 1)
     let m = 4 * (i - 1);
@@ -116,9 +127,46 @@ function fillD2(matrix, points, i, knots) {
 
     matrix[r][n] = -6 * x // a_i+1
     matrix[r][n + 1] = -2// b_i+1
-
-
+    
     matrix[r][matrix[r].length - 1] = 0 //y;
+}
+
+/**
+ * Подготовить результат.
+ * Возвращает список коэффициентов + границы по х
+ * @param {Array} coefs 
+ * @param {Array} points 
+ * @returns 
+ */
+function prepareResult(coefs, points){
+    let result = [];
+    const chunkSize = 4;
+    for (let i = 0; i < coefs.length; i += chunkSize) {
+        const chunk = coefs.slice(i, i + chunkSize);
+        result.push(chunk.map(e => e));
+    }
+
+    // добавляем границы [x(i) ; x(i+1)]
+    for (let i = 0; i < result.length; i++) {
+        result[i].push(points[i].x)
+        result[i].push(points[i + 1].x)
+    }
+
+    return result;
+}
+
+/**
+ * Доваляет в матрицу конечные условия натурального сплайна
+ * @param {*} matrix 
+ * @param {*} points 
+ */
+function fillEndSplineCondition(matrix, points){
+    // условия натурального сплайна, еще 2 уравнения
+    matrix[matrix.length - 2][0] = 6 * points[0].x;
+    matrix[matrix.length - 2][1] = 2;
+
+    matrix[matrix.length - 1][matrix[0].length - 5] = 6 * points[points.length - 1].x;
+    matrix[matrix.length - 1][matrix[0].length - 4] = 2;
 }
 
 /**
@@ -136,38 +184,4 @@ function newZeroMatrix(n) {
         }
     }
     return matrix;
-}
-
-function solveMatrix(m) {
-    var len = m.length;
-
-    for (var i = 0; i < len; i++) { // column
-        for (var j = i + 1; j < len; j++) { // row
-            if (m[i][i] == 0) { // check if cell is zero
-                var k = i;
-
-                // search for an element where this cell is not zero
-                while (m[k][i] == 0) k++;
-
-                // swap rows
-                var tmp = m[k].slice();
-                m[k] = m[i].slice();
-                m[i] = tmp.slice();
-            }
-
-            var fac = -m[j][i] / m[i][i];
-            for (var k = i; k < len + 1; k++) // elements in a row
-                m[j][k] += fac * m[i][k];
-        }
-    }
-
-    var solution = [];
-    for (var i = len - 1; i >= 0; i--) { // column
-        solution.unshift(m[i][len] / m[i][i]);
-        for (var k = i - 1; k >= 0; k--) {
-            m[k][len] -= m[k][i] * solution[0];
-        }
-    }
-
-    return solution;
 }

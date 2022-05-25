@@ -32,7 +32,6 @@ function derrive(data, i) {
     }
 }
 
-
 export {
     derrive
 }
